@@ -1,4 +1,5 @@
 ![CCAS](./static/favicon.ico)
+
 ##Chinese Corpus Analysis System(CCAS)
 
 ###Fundamental Frame
