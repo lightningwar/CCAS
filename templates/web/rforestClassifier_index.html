@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.flat.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/public.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/spinnerstyle.css') }}">
+    <script src="{{ url_for('static', filename='js/amazeui.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ajax.js') }}"></script>
+    <script type="text/javascript" async
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <script type="text/javascript">
+        function $post_method() {
+            $("#floatingCirclesG_best").show();
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', '/RandomForest/calbestN/', true);
+            xhr.send('OK');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    const json = JSON.parse(xhr.responseText);
+                    $("#floatingCirclesG_best").hide();
+                    document.getElementById('rforest_bestK_pic').src = '../../static/Classifier/rf_img/' + json.pic_name;
+                    document.getElementById("best_N").innerHTML = '最佳决策树个数 = ' + json.best_N;
+                    $("#best_N").show();
+                    document.getElementById("best_cross_score").innerHTML = '五折交叉验证准确率 = ' + json.best_cross_score;
+                    $("#best_cross_score").show();
+                    $post_calprescore('/RandomForest/calrfprescore/', 'OK');
+                }
+            }
+        }
+
+        function $post_calprescore(url, data) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    document.getElementById("pre_score").innerHTML = '测试集准确率 = ' + xhr.responseText;
+                    $("#pre_score").show();
+                    $post_confusionmatrix('/RandomForest/confusionmatrix/', 'OK');
+                }
+            }
+        }
+
+        function $post_confusionmatrix(url, data) {
+            $("#floatingCirclesG_matrix").show();
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    const json = JSON.parse(xhr.responseText);
+                    $("#floatingCirclesG_matrix").hide();
+                    document.getElementById('confusion_matrix_pic').src = '../../static/Classifier/rf_img/' + json.pic_name;
+                    document.getElementById("TP").innerHTML = '本来是正向，预测也是正向   TP = ' + json.TP
+                    $("#TP").show();
+                    document.getElementById("FP").innerHTML = '本来是负向，预测却是正向   FP = ' + json.FP
+                    $("#FP").show();
+                    document.getElementById("FN").innerHTML = '本来是正向，预测却是负向   FN = ' + json.FN
+                    $("#FN").show();
+                    document.getElementById("TN").innerHTML = '本来是负向，预测也是负向   TN = ' + json.TN
+                    $("#TN").show();
+                    document.getElementById("TN").innerHTML = '本来是负向，预测也是负向   TN = ' + json.TN
+                    $("#TN").show();
+                    $("#precision_rate").html(' = ' + json.accurate_rate);
+                    $("#recall_rate").html(' = ' + json.recall_rate);
+                    $post_roc('/RandomForest/roc/', 'OK')
+                }
+            }
+        }
+
+        function $post_roc(url, data) {
+            $("#floatingCirclesG_roc").show();
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    const json = JSON.parse(xhr.responseText);
+                    $("#floatingCirclesG_roc").hide();
+                    document.getElementById('roc_pic').src = '../../static/Classifier/rf_img/' + json.pic_name;
+                    $post_pr('/RandomForest/pr/', 'OK')
+                }
+            }
+        }
+
+        function $post_pr(url, data) {
+            $("#floatingCirclesG_pr").show();
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    $("#floatingCirclesG_pr").hide();
+                    console.log('什么情况' + xhr.responseText);
+                    document.getElementById('pr_pic').src = '../../static/Classifier/rf_img/' + xhr.responseText;
+                }
+            }
+        }
+
+        window.onload = $post_method;
+    </script>
+</head>
+<body>
+<header class="am-topbar am-topbar-inverse">
+    <div class="am-container">
+        <p class="am-topbar-brand"><a href="{{ url_for('index') }}" style="text-decoration: none"
+                                      class="am-topbar-logo">中文语料分析系统</a></p>
+        <!-- <a class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#doc-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></a> -->
+        <div class="am-collapse am-topbar-collapse" id="doc-topbar-collapse">
+            <ul class="am-nav am-nav-pills am-topbar-nav">
+                <li class="am-active"><a href="{{ url_for('index') }}">首页</a></li>
+                <!-- <li><a href="/about">关于</a></li> -->
+
+            </ul>
+            <div class="am-topbar-right">
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">林宇庭</a>
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">20160310623</a>
+            </div>
+        </div>
+    </div>
+    <div id="web_bg" style="background-image: url({{ url_for('static', filename='img/background.png') }});"></div>
+</header>
+<div class="am-container">
+    <div class="logo">基于随机森林的中文文本分析</div>
+    <blockquote><p>随机森林是一种有监督学习算法，是以决策树为基学习器的集成学习算法。随机森林非常简单，易于实现，计算开销也很小，但是它在分类和回归上表现出非常惊人的性能，因此，随机森林被誉为“代表集成学习技术水平的方法”。</p></blockquote>
+    <h3><span class="am-icon-dashboard am-icon-md" style="color:blue"></span>&emsp;模型评估</h3>
+{#    <blockquote style="color: blue"><p>专业本机IP地址查询，指定IP地址精准定位，数据实时更新，精确到网吧，街道，公司等。查出的结果仅供参考！</p></blockquote>#}
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default">
+        <h2 class="am-titlebar-title">调整决策树个数以选择能力最优模型(1~31)</h2>
+    </div>
+
+    <div style="display:none" id="floatingCirclesG_best">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+    <div style="text-align: center;margin-top: 20px">
+        <img class="am-img-bdrs" src="" style="width: 75%;text-align: match-parent" id="rforest_bestK_pic">
+    </div>
+    <ul>
+        <li style="display: none" id="best_N">...</li>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">五折交叉验证准确率</h2>
+    </div>
+    <ul>
+        <li style="display: none" id="best_cross_score"></li>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">评价模型预测结果</h2>
+    </div>
+    <ul>
+        <li style="display: none" id="pre_score"></li>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">混淆矩阵</h2>
+    </div>
+
+
+    <div style="display:none" id="floatingCirclesG_matrix">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+    <div style="text-align: center;margin-top: 20px">
+        <img class="am-img-bdrs" src="" style="width: 75%" id="confusion_matrix_pic">
+    </div>
+    <ul>
+        <li style="display: none" id="TP"></li>
+        <li style="display: none" id="FP"></li>
+        <li style="display: none" id="FN"></li>
+        <li style="display: none" id="TN"></li>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">精准率</h2>
+    </div>
+    <center>
+        <table>
+            <tr>
+                <td><span class="math display">\[{\rm precision} = \cfrac{TP}{TP+FP}\]</span></td>
+                <td><p id="precision_rate"></p></td>
+            </tr>
+        </table>
+    </center>
+    <br/>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">召回率</h2>
+    </div>
+    <center>
+        <table>
+            <tr>
+                <td><span class="math display">\[{\rm recall} = \cfrac{TP}{TP+FN}\]</span></td>
+                <td><p id="recall_rate"></p></td>
+            </tr>
+        </table>
+    </center>
+    <br/>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">ROC图</h2>
+    </div>
+
+
+    <div style="display:none" id="floatingCirclesG_roc">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+    <div style="text-align: center;margin-top: 20px">
+        <img class="am-img-bdrs" src="" style="width: 75%" id="roc_pic">
+    </div>
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">PR图</h2>
+    </div>
+
+
+    <div style="display:none" id="floatingCirclesG_pr">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+    <div style="text-align: center;margin-top: 20px">
+        <img class="am-img-bdrs" src="" style="width: 75%" id="pr_pic">
+    </div>
+</div>
+
+<footer>
+    <div class="am-container" style="margin-top: 60px">
+        <br><br>
+        <p><span class="intro-siteinfo">♪(^∇^*) 加载中...</span><br>
+        <p><span class="am-icon-copyright" style="color:gray"></span>&emsp;2019 Chinese Corpus Analysis System(CCAS)
+    </div>
+</footer>
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.flat.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/public.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/spinnerstyle.css') }}">
+    {#    <script src="{{ url_for('static', filename='js/amazeui.min.js') }}"></script>#}
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ajax.js') }}"></script>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+
+</head>
+<body>
+<header class="am-topbar am-topbar-inverse">
+    <div class="am-container">
+        <p class="am-topbar-brand"><a href="{{ url_for('index') }}" style="text-decoration: none"
+                                      class="am-topbar-logo">中文语料分析系统</a></p>
+        <!-- <a class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#doc-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></a> -->
+        <div class="am-collapse am-topbar-collapse" id="doc-topbar-collapse">
+            <ul class="am-nav am-nav-pills am-topbar-nav">
+                <li class="am-active"><a href="{{ url_for('index') }}">首页</a></li>
+                <!-- <li><a href="/about">关于</a></li> -->
+
+            </ul>
+            <div class="am-topbar-right">
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">林宇庭</a>
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">20160310623</a>
+            </div>
+        </div>
+    </div>
+    <div id="web_bg" style="background-image: url({{ url_for('static', filename='img/background.png') }});"></div>
+</header>
+<div class="am-container">
+    <div class="logo">基于朴素贝叶斯的中文文本分析</div>
+    <blockquote><p>朴素贝叶斯（Naive
+        Bayesian）是基于贝叶斯定理和特征条件独立假设的分类方法，它通过特征计算分类的概率，选取概率大的情况，是基于概率论的一种机器学习分类（监督学习）方法，被广泛应用于情感分类领域的分类器。</p></blockquote>
+    <h3><span class="am-icon-dashboard am-icon-md" style="color:blue"></span>&emsp;模型评估</h3>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">五折交叉验证准确率</h2>
+    </div>
+    <span class="am-icon-spinner am-icon-spin" style="color:blue" style="display: none" id="cross_val_spinner"></span>
+    <ul>
+        <li style="display: none" id="mnb_cross_score">
+        </li>
+        {#        <li style="display: none" id="gnb_cross_score"><span class="am-icon-spinner am-icon-spin" style="color:blue"></span>#}
+        {#        </li>#}
+        <li style="display: none" id="bnb_cross_score">
+        </li>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">评价模型预测结果</h2>
+    </div>
+    <span class="am-icon-spinner am-icon-spin" style="color:blue" style="display: none" id="pre_val_spinner"></span>
+    <ul>
+        <li style="display: none" id="mnb_pre_score"><span class="am-icon-gears am-icon-md" style="color:blue"></span>
+        </li>
+        {#        <li style="display: none" id="gnb_pre_score"><span class="am-icon-gears am-icon-md" style="color:blue"></span>#}
+        {#        </li>#}
+        <li style="display: none" id="bnb_pre_score"><span class="am-icon-gears am-icon-md" style="color:blue"></span>
+        </li>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">混淆矩阵</h2>
+    </div>
+
+    <div style="display:none" id="floatingCirclesG_matrix">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+
+    <ul data-am-widget="gallery" class="am-gallery sm-block-grid-2 am-gallery-imgbordered"
+        data-am-gallery="{pureview: 1}" id="mt">
+        <table id="matrix_table" style="display: none">
+            <tr>
+                <td>
+                    <li>
+                        <div class="am-gallery-item" id="mnb_matrix">
+                            <img style="margin-right: 5px" id="mnb_matrix_pic" src=""
+                                 alt="多项式贝叶斯模型"/>
+                            <div style="text-align: center">
+                                <h2 class="am-gallery-title">多项式贝叶斯模型</h2>
+                            </div>
+                            <ul>
+                                <li id="mnb_precision"></li>
+                                <li id="mnb_recall"></li>
+                            </ul>
+
+                        </div>
+                    </li>
+                </td>
+                {#                <td>#}
+                {#                    <li>#}
+                {#                        <div class="am-gallery-item" id="gnb_matrix">#}
+                {#                            <img id="gnb_matrix_pic" src=""#}
+                {#                                 alt="高斯贝叶斯模型"#}
+                {#                                 data-rel=""/>#}
+                {#                            <h3 class="am-gallery-title">高斯贝叶斯模型</h3>#}
+                {#                            <ul>#}
+                {#                                <li id="gnb_precision"></li>#}
+                {#                                <li id="gnb_precision"></li>#}
+                {#                            </ul>#}
+                {#                        </div>#}
+                {#                    </li>#}
+                {#                </td>#}
+                <td>
+                    <li>
+                        <div class="am-gallery-item" id="bnb_matrix">
+                            <img style="margin-left: 5px" id="bnb_matrix_pic" src=""
+                                 alt="伯努利贝叶斯模型"
+                                 data-rel=""/>
+                            <div style="text-align: center">
+                                <h3 class="am-gallery-title">伯努利贝叶斯模型</h3>
+                            </div>
+                            <ul>
+                                <li id="bnb_precision"></li>
+                                <li id="bnb_recall"></li>
+                            </ul>
+                        </div>
+                    </li>
+                </td>
+            </tr>
+        </table>
+    </ul>
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">ROC图</h2>
+    </div>
+
+
+    <div style="display:none" id="floatingCirclesG_roc">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+
+    <ul data-am-widget="gallery" class="am-gallery sm-block-grid-2 am-gallery-imgbordered"
+        data-am-gallery="{pureview: 1}" id="roc_table" style="display: none">
+        <table>
+            <tr>
+                <td>
+                    <li>
+                        <div class="am-gallery-item" id="mnb_martix">
+                            <img style="margin-right: 5px" id="mnb_roc_pic" src=""
+                                 alt="多项式贝叶斯模型"
+                                 data-rel=""/>
+                            <div style="text-align: center">
+                                <h3 class="am-gallery-title">多项式贝叶斯模型</h3>
+                            </div>
+                            <ul>
+                                <li id="mnb_auc"></li>
+                            </ul>
+                        </div>
+                    </li>
+                </td>
+                {#                <td>#}
+                {#                    <li>#}
+                {#                        <div class="am-gallery-item" id="gnb_martix">#}
+                {#                            <img id="gnb_roc_pic" src=""#}
+                {#                                 alt="高斯贝叶斯模型"#}
+                {#                                 data-rel=""/>#}
+                {#                            <h3 class="am-gallery-title">高斯贝叶斯模型</h3>#}
+                {#                        </div>#}
+                {#                    </li>#}
+                {#                </td>#}
+                <td>
+                    <li>
+                        <div class="am-gallery-item" id="bnb_martix">
+                            <img style="margin-left: 5px" id="bnb_roc_pic" src=""
+                                 alt="伯努利贝叶斯模型"
+                                 data-rel=""/>
+                            <div style="text-align: center">
+                                <h3 class="am-gallery-title">伯努利贝叶斯模型</h3>
+                            </div>
+                            <ul>
+                                <li id="bnb_auc"></li>
+                            </ul>
+                        </div>
+                    </li>
+                </td>
+            </tr>
+        </table>
+    </ul>
+
+
+    <div data-am-widget="titlebar" class="am-titlebar am-titlebar-default" style="margin-top: 30px">
+        <h2 class="am-titlebar-title">PR图</h2>
+    </div>
+
+
+    <div style="display:none" id="floatingCirclesG_pr">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+    <ul data-am-widget="gallery" class="am-gallery sm-block-grid-2 am-gallery-imgbordered"
+        data-am-gallery="{pureview: 1}" id="pr_table" style="display: none">
+        <table>
+            <tr>
+                <td>
+                    <li>
+                        <div class="am-gallery-item" id="mnb_matrix">
+                            <img style="margin-right: 5px" id="mnb_pr_pic" src=""
+                                 alt="多项式贝叶斯模型"
+                                 data-rel=""/>
+                            <div style="text-align: center">
+                                <h3 class="am-gallery-title">多项式贝叶斯模型</h3>
+                            </div>
+                        </div>
+                    </li>
+                </td>
+                {#                <td>#}
+                {#                    <li>#}
+                {#                        <div class="am-gallery-item" id="gnb_matrix">#}
+                {#                            <img id="gnb_pr_pic" src=""#}
+                {#                                 alt="高斯贝叶斯模型"#}
+                {#                                 data-rel=""/>#}
+                {#                            <h3 class="am-gallery-title">高斯贝叶斯模型</h3>#}
+                {#                        </div>#}
+                {#                    </li>#}
+                {#                </td>#}
+                <td>
+                    <li>
+                        <div class="am-gallery-item" id="bnb_matrix">
+                            <img style="margin-left: 5px" id="bnb_pr_pic" src=""
+                                 alt="伯努利贝叶斯模型"
+                                 data-rel=""/>
+                            <div style="text-align: center">
+                                <h3 class="am-gallery-title">伯努利贝叶斯模型</h3>
+                            </div>
+                        </div>
+                    </li>
+                </td>
+            </tr>
+        </table>
+    </ul>
+</div>
+
+<footer>
+    <div class="am-container" style="margin-top: 60px">
+        <br><br>
+        <p><span class="intro-siteinfo">♪(^∇^*) 加载中...</span><br>
+        <p><span class="am-icon-copyright" style="color:gray"></span>&emsp;2019 Chinese Corpus Analysis System(CCAS)
+    </div>
+</footer>
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+
+<script type="text/javascript">
+    function $post_method() {
+        $("#cross_val_spinner").show();
+        const xhr = new XMLHttpRequest();
+        xhr.open('post', '/bayes/calbayescrossvalscore/', true);
+        xhr.send('OK');
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                $("#cross_val_spinner").hide();
+                const json = JSON.parse(xhr.responseText);
+                document.getElementById("mnb_cross_score").innerHTML = '多项式模型准确率平均值: Acc = ' + json.mnb_cross_score;
+                $("#mnb_cross_score").show();
+                {#$("#gnb_cross_score").show();#}
+                {#document.getElementById("gnb_cross_score").innerHTML = '高斯模型准确率平均值　: Acc = ' + json.gnb_cross_score;#}
+                document.getElementById("bnb_cross_score").innerHTML = '伯努利模型准确率平均值: Acc = ' + json.bnb_cross_score;
+                $("#bnb_cross_score").show();
+                $post_calprescore('/bayes/calbayesprescore/', 'OK');
+            }
+        }
+    }
+
+    function $post_calprescore(url, data) {
+        $("#pre_val_spinner").show();
+        const xhr = new XMLHttpRequest();
+        xhr.open('post', url, true);
+        xhr.send(data);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                $("#pre_val_spinner").hide();
+                const json = JSON.parse(xhr.responseText);
+                document.getElementById("mnb_pre_score").innerHTML = '多项式模型预测结果准确率: Acc = ' + json.mnb_pre_score;
+                $("#mnb_pre_score").show();
+                {#document.getElementById("gnb_pre_score").innerHTML = '高斯模型预测结果准确率　: Acc = ' + json.gnb_pre_score;#}
+                {#$("#gnb_pre_score").show();#}
+                document.getElementById("bnb_pre_score").innerHTML = '伯努利模型预测结果准确率: Acc = ' + json.bnb_pre_score;
+                $("#bnb_pre_score").show();
+                $post_confusionmatrix('/bayes/bayesconfusionmatrix/', 'OK');
+            }
+        }
+    }
+
+    function $post_confusionmatrix(url, data) {
+        $("#floatingCirclesG_matrix").show();
+        const xhr = new XMLHttpRequest();
+        xhr.open('post', url, true);
+        xhr.send(data);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                const json = JSON.parse(xhr.responseText);
+                $("#floatingCirclesG_matrix").hide();
+                document.getElementById('mnb_matrix_pic').src = '../../static/Classifier/bayes_img/' + json.mnb_pic_name;
+                {#document.getElementById('gnb_matrix_pic').src = '../../static/Classifier/bayes_img/' + json.gnb_pic_name;#}
+                document.getElementById('bnb_matrix_pic').src = '../../static/Classifier/bayes_img/' + json.bnb_pic_name;
+                {#document.getElementById('mnb_matrix_pic').style.src#}
+                {#document.getElementById('mnb_matrix_pic').setAttribute('data-rel', '../../static/Classifier/bayes_img/' + json.mnb_pic_name);#}
+                {#document.getElementById('gnb_matrix_pic').setAttribute('data-rel', '../../static/Classifier/bayes_img/' + json.gnb_pic_name);#}
+                {#document.getElementById('bnb_matrix_pic').setAttribute('data-rel', '../../static/Classifier/bayes_img/' + json.bnb_pic_name);#}
+                document.getElementById("mnb_precision").innerHTML = '精准率：precision = ' + json.mnb_accurate_rate;
+                {#document.getElementById("gnb_precision").innerHTML = 'precision = ' + json.gnb_accurate_rate;#}
+                document.getElementById("bnb_precision").innerHTML = '精准率：precision = ' + json.bnb_accurate_rate;
+                document.getElementById("mnb_recall").innerHTML = '回召率：recall = ' + json.mnb_recall_rate;
+                {#document.getElementById("gnb_recall").innerHTML = 'recall = ' + json.gnb_recall_rate;#}
+                document.getElementById("bnb_recall").innerHTML = '回召率：recall = ' + json.bnb_recall_rate;
+                $("#matrix_table").show();
+                $post_roc('/bayes/bayesroc/', 'OK')
+            }
+        }
+    }
+
+    function $post_roc(url, data) {
+        $("#floatingCirclesG_roc").show();
+        const xhr = new XMLHttpRequest();
+        xhr.open('post', url, true);
+        xhr.send(data);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                $(".am-gallery sm-block-grid-2 am-gallery-imgbordered").trigger("create");
+                $(".am-gallery-item").trigger("create");
+                $(".am-gallery-title").trigger("create");
+                const json = JSON.parse(xhr.responseText);
+                $("#floatingCirclesG_roc").hide();
+                document.getElementById('mnb_roc_pic').src = '../../static/Classifier/bayes_img/' + json.mnb_pic_name;
+                document.getElementById("mnb_auc").innerHTML = 'ROC曲线下方的面积：AUC = ' + json.mnb_roc_auc;
+                {#document.getElementById('gnb_roc_pic').src = '../../static/Classifier/bayes_img/' + json.gnb_pic_name;#}
+                document.getElementById('bnb_roc_pic').src = '../../static/Classifier/bayes_img/' + json.bnb_pic_name;
+                document.getElementById("bnb_auc").innerHTML = 'ROC曲线下方的面积：AUC = ' + json.bnb_roc_auc;
+                $(".am-gallery sm-block-grid-2 am-gallery-imgbordered").trigger("create");
+                $(".am-gallery-item").trigger("create");
+                $(".am-gallery-title").trigger("create");
+
+                $("#roc_table").show();
+                document.getElementById('bnb_roc_pic').src = '../../static/Classifier/bayes_img/' + json.bnb_pic_name;
+                $(".am-gallery sm-block-grid-2 am-gallery-imgbordered").trigger("create");
+                $(".am-gallery-item").trigger("create");
+                $(".am-gallery-title").trigger("create");
+                $post_pr('/bayes/bayespr/', 'OK')
+            }
+        }
+    }
+
+    function $post_pr(url, data) {
+        $("#floatingCirclesG_pr").show();
+        const xhr = new XMLHttpRequest();
+        xhr.open('post', url, true);
+        xhr.send(data);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                const json = JSON.parse(xhr.responseText);
+                $("#floatingCirclesG_pr").hide();
+                document.getElementById('mnb_pr_pic').src = '../../static/Classifier/bayes_img/' + json.mnb_pic_name;
+                {#document.getElementById('gnb_pr_pic').src = '../../static/Classifier/bayes_img/' + json.gnb_pic_name;#}
+                document.getElementById('bnb_pr_pic').src = '../../static/Classifier/bayes_img/' + json.bnb_pic_name;
+                document.getElementById('mnb_pr_pic').setAttribute('data-rel', '../../static/Classifier/bayes_img/' + json.mnb_pic_name);
+                {#document.getElementById('gnb_pr_pic').setAttribute('data-rel', '../../static/Classifier/bayes_img/' + json.gnb_pic_name);#}
+                document.getElementById('bnb_pr_pic').setAttribute('data-rel', '../../static/Classifier/bayes_img/' + json.bnb_pic_name);
+                $("#pr_table").show();
+            }
+        }
+    }
+
+    window.onload = $post_method;
+</script>
+<script src="{{ url_for('static', filename='js/amazeui.min.js') }}"></script>
+</body>
+</html>

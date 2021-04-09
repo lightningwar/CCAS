@@ -1,0 +1,21 @@
+C:\Users\Administrator\AppData\Local\Programs\Python\Python38\lib\site-packages\past\builtins\misc.py:45: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+  from imp import reload
+C:\Users\Administrator\Desktop\CCAS\venv\lib\site-packages\botocore\awsrequest.py:624: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.9 it will stop working
+  class HeadersDict(collections.MutableMapping):
+C:\Users\Administrator\Desktop\CCAS\venv\lib\site-packages\gensim\corpora\dictionary.py:11: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.9 it will stop working
+  from collections import Mapping, defaultdict
+C:\Users\Administrator\Desktop\CCAS\venv\lib\site-packages\scipy\sparse\sparsetools.py:21: DeprecationWarning: `scipy.sparse.sparsetools` is deprecated!
+scipy.sparse.sparsetools is a private module for scipy.sparse, and should not be used.
+  _deprecated()
+C:\Users\Administrator\Desktop\CCAS\venv\lib\site-packages\gensim\models\doc2vec.py:73: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.9 it will stop working
+  from collections import namedtuple, defaultdict, Iterable
+
+
+misc.py   45   imp   ->  importlib
+plugin.py 40 imp ->7375 importlib
+awsrequest.py 624  collection.abc
+session.py 944 collection.abc
+sparsetools.py 21 pass
+doc2vec.py 73       iterable
+fasttext.py 2088
+dictionary.py  11defaultfict

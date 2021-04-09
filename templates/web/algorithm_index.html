@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.flat.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/public.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/amazeui.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ajax.js') }}"></script>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+</head>
+<body>
+
+<header class="am-topbar am-topbar-inverse">
+    <div class="am-container">
+        <p class="am-topbar-brand"><a href="{{ url_for('index') }}" style="text-decoration: none"
+                                      class="am-topbar-logo">中文语料分析系统</a></p>
+        <!-- <a class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#doc-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></a> -->
+        <div class="am-collapse am-topbar-collapse" id="doc-topbar-collapse">
+            <ul class="am-nav am-nav-pills am-topbar-nav">
+                <li class="am-active"><a href="{{ url_for('index') }}">首页</a></li>
+                <!-- <li><a href="/about">关于</a></li> -->
+
+            </ul>
+            <div class="am-topbar-right">
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">林宇庭</a>
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">20160310623</a>
+            </div>
+        </div>
+    </div>
+    <div id="web_bg" style="background-image: url({{ url_for('static', filename='img/background.png') }});"></div>
+    <script>
+        function $on() {
+            $("#jieba_cut").hide();
+            $("#stopwords_cut").hide();
+            $("#divide").hide();
+            $("#loading_done").hide();
+            $("#cleaning").hide();
+        }
+
+        function $upload() {
+            const f = document.querySelector('#f');
+            console.dir(f);
+            const fdata = new FormData();
+            fdata.append('file', f.files[0]);
+            $("#jieba_cut").hide();
+            $("#stopwords_cut").hide();
+            $("#divide").hide();
+            $("#loading_done").hide();
+            $post_upload('/algorithm/upload/', fdata)
+        }
+
+        function $post_upload(url, data) {
+            const xhr = new XMLHttpRequest();
+            let filename;
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    filename = xhr.responseText;
+                    $("#loading_done").show();
+                    $("#cleaning").show();
+                    document.getElementById("cleaning").innerHTML = "<td id=\"cleaning\" style=\"display: none\"><p style=\"margin: auto;margin-left:60px\"><i\n" +
+                        "                    class=\"am-icon-circle-o-notch am-icon-spin\"\n" +
+                        "                    style=\"color:blue\"></i>&emsp;正在进行数据清洗</p></td>"
+                    $post_wordcut('/wordcut/', filename)
+                }
+            }
+        }
+
+        function $post_wordcut(url, data) {
+            $("#jieba_cut").hide();
+            $("#stopwords_cut").hide();
+            $("#divide").hide();
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    $("#jieba_cut").show();
+                    $post_stopwordscut('/stopwordscut/', 'OK')
+                }
+            }
+        }
+
+        function $post_stopwordscut(url, data) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    $("#stopwords_cut").show();
+                    $post_divide('/divide/', 'OK')
+                }
+            }
+        }
+
+        function $post_divide(url, data) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    $("#divide").show();
+                    document.getElementById("cleaning").innerHTML = "<td id=\"cleaning\" style=\"display: none\"><p style=\"margin: auto;margin-left:60px\"><i class=\"am-icon-check-circle\"\n" +
+                        "                                                            style=\"color:green\"></i>&emsp;完成清洗</p></td>"
+                    $post_sample('/sample/', 'OK')
+                }
+            }
+        }
+
+        function $post_sample(url, data) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    const json = JSON.parse(xhr.responseText)
+                    console.log(json)
+                    $("#sample_table").show();
+                    $("#sample_size").html(json.sample_size);
+                    $("#train_size").html(json.train_size);
+                    $("#test_size").html(json.test_size);
+                }
+            }
+        }
+
+    </script>
+</header>
+<div class="am-container">
+    <div class="logo">基于多种分类器的中文文本分析比较</div>
+    <blockquote><p>专业本机IP地址查询，指定IP地址精准定位，数据实时更新，精确到网吧，街道，公司等。查出的结果仅供参考！</p></blockquote>
+    <h2><span class="am-icon-paper-plane-o am-icon-md" style="color:blue"></span> 上传待分析文本</h2>
+
+    <form action="" method="post" enctype="multipart/form-data">
+        <table>
+            <tr>
+                <td><input type="file" class="btn btn-default navbar-btn" name="f" id="f" onclick="$on()"></td>
+                <td>
+                <td style="display: none" id="loading_done"><p style="margin: auto"><i class="am-icon-check-circle"
+                                                                                       style="color:green"></i>&emsp;加载完成
+                </p></td>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <h2 style="margin-top: 60px"><span class="am-icon-eraser am-icon-md" style="color:blue"></span> 数据清洗</h2>
+    <table>
+        <tr>
+            <td>
+                <button class="am-btn am-btn-primary" onclick="$upload()">
+                    文本预处理&emsp;
+                    <i class="am-icon-scissors"></i>
+                </button>
+            </td>
+
+            <td id="cleaning" style="display: none"><p style="margin: auto;margin-left:60px"><i
+                    class="am-icon-circle-o-notch am-icon-spin"
+                    style="color:blue"></i>&emsp;正在进行数据清洗</p></td>
+            {#            <td id="cleaning" style="display: none"><p style="margin: auto;margin-left:60px"><i#}
+            {#                    class="am-icon-check-circle"#}
+            {#                    style="color:blue"></i>&emsp;完成清洗</p></td>#}
+        </tr>
+    </table>
+
+    <p id="jieba_cut" style="display: none"><span class="am-icon-check-circle am-icon-sm" style="color:green"></span>&emsp;jieba分词
+    </p>
+    <p id="stopwords_cut" style="display: none"><span class="am-icon-check-circle am-icon-sm"
+                                                      style="color:green"></span>&emsp;去停用词、啰嗦语等</p>
+    <p id="divide" style="display: none"><span class="am-icon-check-circle am-icon-sm" style="color:green"></span>&emsp;划分训练集和测试集、训练集特征向量化
+    </p>
+
+    <h2 style="margin-top: 60px"><span class="am-icon-bar-chart-o am-icon-md" style="color:blue"></span> 数据样本</h2>
+    <table class="am-table am-table-bd am-table-bdrs" id="sample_table" style="display: none">
+        <thead>
+        <tr>
+            <th style="width:100px">Sample</th>
+            <th>num</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><code>样本总量</code></td>
+            <td id="sample_size"></td>
+        </tr>
+        <tr>
+            <td><code>训练集总量</code></td>
+            <td id="train_size"></td>
+        </tr>
+        <tr>
+            <td><code>测试集总量</code></td>
+            <td id="test_size"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2 style="margin-top: 60px"><span class="am-icon-gears am-icon-md" style="color:blue"></span>&emsp;文本分类器分析</h2>
+
+
+    <ul class="am-avg-sm-1 am-avg-md-2 am-avg-lg-3 am-thumbnails list">
+        <li>
+            <div class="am-panel am-u-sm-centered am-text-center am-padding-xs">
+                <a href="{{ url_for('Classifiers.knnClassifier_index') }}" target="_Blank">
+                    <img src="{{ url_for('static', filename='img/knnClassifier.jpg') }}">
+                </a>
+                <p class="am-text-sm am-padding-horizontal"><a class="am-text-lg am-text-primary">基于K邻近算法中文文本分析</a>
+{#                    <br>M3U8在线播放</p>#}
+            </div>
+        </li>
+        <li>
+            <div class="am-panel am-u-sm-centered am-text-center am-padding-xs">
+                <a href="{{ url_for('Classifiers.bayesClassifier_index') }}" target="_Blank">
+                    <img src="{{ url_for('static', filename='img/bayesClassifier.jpg') }}">
+                </a>
+                <p class="am-text-sm am-padding-horizontal"><a class="am-text-lg am-text-primary">基于朴素贝叶斯中文文本分析</a>
+{#                    <br>电脑麻将WEB版</p>#}
+            </div>
+        </li>
+        <li>
+            <div class="am-panel am-u-sm-centered am-text-center am-padding-xs">
+                <a href="{{ url_for('Classifiers.rforestClassifier_index') }}" target="_Blank">
+                    <img src="{{ url_for('static', filename='img/rforestClassifier.jpg') }}">
+                </a>
+                <p class="am-text-sm am-padding-horizontal"><a class="am-text-lg am-text-primary">基于随机森林中文文本分析</a>
+{#                    <br>电脑麻将WEB版</p>#}
+            </div>
+        </li>
+{#        <li>#}
+{#            <div class="am-panel am-u-sm-centered am-text-center am-padding-xs">#}
+{#                <a href="majiang">#}
+{#                    <img src="{{ url_for('static', filename='img/SVM_KNN_BAYES.jpg') }}">#}
+{#                </a>#}
+{#                <p class="am-text-sm am-padding-horizontal"><a class="am-text-xl am-text-primary" href="majiang">NLP文本情感分析实例</a>#}
+{#                    <br>电脑麻将WEB版</p>#}
+{#            </div>#}
+{#        </li>#}
+{#        <li>#}
+{#            <div class="am-panel am-u-sm-centered am-text-center am-padding-xs">#}
+{#                <a href="majiang">#}
+{#                    <img src="{{ url_for('static', filename='img/SVM_KNN_BAYES.jpg') }}">#}
+{#                </a>#}
+{#                <p class="am-text-sm am-padding-horizontal"><a class="am-text-xl am-text-primary" href="majiang">NLP文本情感分析实例</a>#}
+{#                    <br>电脑麻将WEB版</p>#}
+{#            </div>#}
+{#        </li>#}
+{#        <li>#}
+{#            <div class="am-panel am-u-sm-centered am-text-center am-padding-xs">#}
+{#                <a href="majiang">#}
+{#                    <img src="{{ url_for('static', filename='img/SVM_KNN_BAYES.jpg') }}">#}
+{#                </a>#}
+{#                <p class="am-text-sm am-padding-horizontal"><a class="am-text-xl am-text-primary" href="majiang">NLP文本情感分析实例</a>#}
+{#                    <br>电脑麻将WEB版</p>#}
+{#            </div>#}
+{#        </li>#}
+    </ul>
+
+</div>
+
+<footer>
+    <div class="am-container" style="margin-top: 60px">
+        </br></br>
+        <p><span class="intro-siteinfo">♪(^∇^*) 加载中...</span><br>
+        <p><span class="am-icon-copyright" style="color:gray"></span>&emsp;2019 Chinese Corpus Analysis System(CCAS)
+    </div>
+</footer>
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+</body>
+</html>

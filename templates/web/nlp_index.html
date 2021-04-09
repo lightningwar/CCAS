@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.loli.net/ajax/libs/amazeui/2.7.2/css/amazeui.flat.min.css">
+    {#    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">#}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/public.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/spinnerstyle.css') }}">
+    <script src="{{ url_for('static', filename='js/amazeui.min.js') }}"></script>
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+
+</head>
+<body>
+<header class="am-topbar am-topbar-inverse">
+    <div class="am-container">
+        <p class="am-topbar-brand"><a href="{{ url_for('index') }}" class="am-topbar-logo">中文语料分析系统</a></p>
+        <!-- <a class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#doc-topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></a> -->
+        <div class="am-collapse am-topbar-collapse" id="doc-topbar-collapse">
+            <ul class="am-nav am-nav-pills am-topbar-nav">
+                <li class="am-active"><a href="{{ url_for('index') }}">首页</a></li>
+                <!-- <li><a href="/about">关于</a></li> -->
+
+            </ul>
+            <div class="am-topbar-right">
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">林宇庭</a>
+                <a class="am-btn am-btn-primary am-topbar-btn am-btn-sm">20160310623</a>
+            </div>
+        </div>
+    </div>
+    <div id="web_bg" style="background-image: url({{ url_for('static', filename='img/background.png') }});"></div>
+    <script>
+        function $spider() {
+            let address = $("#address").val();
+            $gatherer('/analysis/tmallscraping/', address)
+        }
+
+
+        function $gatherer(url, data) {
+            const xhr = new XMLHttpRequest();
+            $("#wait_spider").show();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    $("#wait_spider").hide();
+                    $("#scraping").show();
+                    $("#scraping_time").html('抓取时间' + xhr.responseText + 's');
+                    $sample_count('/analysis/sample/', 'OK')
+                }
+            }
+        }
+
+        function $sample_count(url, data) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    $("#sample_total").html('有效数据共' + xhr.responseText + '条');
+                    $("#sample_text").show();
+                    $nlpsentiment('/analysis/nlpsentiment/', 'OK')
+                }
+            }
+        }
+
+        function $nlpsentiment(url, data) {
+            const xhr = new XMLHttpRequest();
+            $("#floatingCirclesG_nlp_pic").show();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    $("#floatingCirclesG_nlp_pic").hide();
+                    document.getElementById('nlp_sentiment_pic').src = '../../static/NlpAnalysis/nlp_img/' + xhr.responseText;
+                    $lda_generating('/analysis/ldaprocessing/', 'OK')
+                }
+            }
+        }
+
+        function $lda_generating(url, data) {
+            const xhr = new XMLHttpRequest();
+            $("#floatingCirclesG_lda_pic").show();
+            xhr.open('post', url, true);
+            xhr.send(data);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    $("#floatingCirclesG_lda_pic").hide();
+                    $("#lda_pic").show();
+                }
+            }
+        }
+    </script>
+</header>
+
+
+<div class="am-container">
+    <div class="logo">NLP文本情感分析实例</div>
+
+    {#    <form action="" method="POST">#}
+    {#        <div class="container">#}
+    {#            <div class="row">#}
+    {#                <div class="col-lg-6">#}
+    {#                    <div class="input-group">#}
+    {#                        <input type="text" class="form-control" placeholder="淘宝天猫地址..." id="address">#}
+    {#                        <span class="input-group-btn">#}
+    {#        <button class="btn btn-default" type="button" id="address_btn">抓取</button>#}
+    {#      </span>#}
+    {#                    </div><!-- /input-group -->#}
+    {#                    <div class="logo"><a href="{{ url_for('nlp_pic_index') }}">情感分析结果条形图</a></div>#}
+    {#                </div><!-- /.col-lg-6 -->#}
+    {#            </div><!-- /.row -->#}
+    {#        </div>#}
+    {#    </form>#}
+    <div class="am-input-group am-input-group-primary">
+        <input type="text" name="q" placeholder="请输入淘宝天猫地址..." autocomplete="off" class="am-form-field" id="address"
+               value="">
+        <span class="am-input-group-btn">
+				<button class="am-btn am-btn-primary" type="submit" id="address_btn" onclick="$spider()">分析</button>
+			</span>
+    </div>
+
+    <h2 style="margin-top: 60px"><span class="am-icon-eraser am-icon-md" style="color:blue"></span> 前期步骤</h2>
+    <i id="wait_spider" style="display: none;color:blue" class="am-icon-circle-o-notch am-icon-spin"></i>
+    <table>
+        <tr>
+            <td><p id="scraping" style="display: none"><span class="am-icon-check-circle am-icon-sm"
+                                                             style="color:green"></span>&emsp;抓取</p></td>
+            <td><p style="margin-left: 20px" id="scraping_time"></p></td>
+        </tr>
+    </table>
+    <h2 style="margin-top: 60px"><span class="am-icon-eraser am-icon-md" style="color:blue"></span> 样本分析</h2>
+    <ul id="sample_text" style="display: none">
+        <li id="sample_total"></li>
+    </ul>
+    <h2 style="margin-top: 60px"><span class="am-icon-eraser am-icon-md" style="color:blue"></span> nlp情感分析图</h2>
+    <div style="text-align: center;margin-top: 20px">
+        <div style="display:none" id="floatingCirclesG_nlp_pic">
+            <div class="f_circleG" id="frotateG_01"></div>
+            <div class="f_circleG" id="frotateG_02"></div>
+            <div class="f_circleG" id="frotateG_03"></div>
+            <div class="f_circleG" id="frotateG_04"></div>
+            <div class="f_circleG" id="frotateG_05"></div>
+            <div class="f_circleG" id="frotateG_06"></div>
+            <div class="f_circleG" id="frotateG_07"></div>
+            <div class="f_circleG" id="frotateG_08"></div>
+        </div>
+        <img class="am-img-bdrs" src="" style="width: 75%;text-align: match-parent" id="nlp_sentiment_pic">
+    </div>
+
+    <h2 style="margin-top: 60px"><span class="am-icon-eraser am-icon-md" style="color:blue"></span> LDA主题分析</h2>
+
+    <div style="display:none" id="floatingCirclesG_lda_pic">
+        <div class="f_circleG" id="frotateG_01"></div>
+        <div class="f_circleG" id="frotateG_02"></div>
+        <div class="f_circleG" id="frotateG_03"></div>
+        <div class="f_circleG" id="frotateG_04"></div>
+        <div class="f_circleG" id="frotateG_05"></div>
+        <div class="f_circleG" id="frotateG_06"></div>
+        <div class="f_circleG" id="frotateG_07"></div>
+        <div class="f_circleG" id="frotateG_08"></div>
+    </div>
+<center>
+    <ul id="lda_pic" style="display: none;width: 50%;text-align: match-parent" data-am-widget="gallery" class="am-gallery sm-block-grid-2
+  md-block-grid-3 lg-block-grid-4 am-gallery-bordered" data-am-gallery="{  }">
+
+        <li>
+            <div class="am-gallery-item">
+                <a href="{{ url_for('lda_index') }}">
+                    <img src="{{ url_for('static', filename='img/LDA.jpg') }}"
+                          target="_Blank" alt="主题建模，关键词"/>
+                    <center><h3 class="am-gallery-title">LDA主题建模分析</h3></center>
+                </a>
+            </div>
+        </li>
+    </ul>
+</center>
+
+</div>
+
+
+<footer>
+    <div class=" am-container" style="margin-top: 60px">
+        <br><br>
+        <p><span class="intro-siteinfo">♪(^∇^*) 加载中...</span><br>
+        <p><span class="am-icon-copyright" style="color:gray"></span>&emsp;2019 Chinese Corpus Analysis System(CCAS)
+    </div>
+</footer>
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+</body>
+</html>
